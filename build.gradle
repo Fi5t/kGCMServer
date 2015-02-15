@@ -12,6 +12,12 @@ buildscript {
     }
 }
 
+jar {
+    manifest {
+        attributes 'Main-Class': 'ru.freedomlogic.kgcmserver.KgcmserverPackage'
+    }
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+}
 
 repositories {
     mavenCentral()
@@ -23,6 +29,7 @@ sourceSets {
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile "org.jetbrains.kotlin:kotlin-compiler:$kotlin_version"
     compile "com.squareup.retrofit:retrofit:1.9.0"
     compile 'io.reactivex:rxjava:1.0.6'
 
