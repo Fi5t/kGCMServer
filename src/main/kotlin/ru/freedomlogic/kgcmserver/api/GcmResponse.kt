@@ -15,7 +15,7 @@ class GcmResponse(val multicast_id: Double,
                   val success: Int,
                   val failure: Int,
                   val canonical_ids: Int,
-                  val results: java.util.ArrayList<Results>?)
+                  val results: ArrayList<Results>?)
 
 /**
  * The objects are listed in the same order as the request (i.e., for each registration ID in the
