@@ -24,7 +24,7 @@ fun main(args: Array<String>) {
                 sendTest()
             } else if (it.hasOption(CmdUtils.ARG_APIKEY) && it.hasOption(CmdUtils.ARG_REGIDS)) {
                 config.apiKey = it.getOptionValue(CmdUtils.ARG_APIKEY)
-                config.registrationIds = it.getOptionValues(CmdUtils.ARG_REGIDS).toArrayList()
+                config.regIds = it.getOptionValues(CmdUtils.ARG_REGIDS).toArrayList()
 
                 sendTest()
             } else {
@@ -52,38 +52,39 @@ fun interactiveMode() {
         cmd = readLine()
 
         cmd?.let {
-            val cmdParts = it.split("\\s")
+            if (it.isNotEmpty()) {
+                val cmdParts = it.split("\\s")
+                val size = cmdParts.size()
 
-            when (cmdParts.first()) {
-                "set-key" -> config.apiKey = cmdParts[1] ?: "None"
-                "show-key" -> println(config.apiKey ?: "None")
+                when (cmdParts.first()) {
+                    "set-key" -> config.apiKey = if (size > 1) cmdParts.get(1) else ""
+                    "show-key" -> println(config.apiKey)
 
-                "add-id" -> config.registrationIds//.add(cmdParts[1])
-                "show-ids" -> config.registrationIds?.forEach { println(it) }
+                    "add-id" -> if (size > 1) config.regIds.add(cmdParts.get(1))
+                    "show-ids" -> config.regIds.forEach { println(it) }
 
-                "save-config" -> saveConfig()
-                "load-config" -> loadConfig()
+                    "save-config" -> saveConfig()
+                    "load-config" -> loadConfig()
 
-                "send-msg" -> {
-                    if (config.apiKey != null && config.registrationIds!!.size() > 0) {
-
-                        if (cmdParts.size() > 1) {
-                            when (cmdParts[1]) {
-                                "simple" -> sendSimple()
-                                "test" -> sendTest()
-                                "custom" -> sendCustom()
-                                else -> println("Type not found. Usage: send-msg <simple|test|custom>")
+                    "send-msg" -> {
+                        if (config.apiKey.isNotEmpty() && config.regIds.isNotEmpty()) {
+                            if (size > 1) {
+                                when (cmdParts.get(1)) {
+                                    "simple" -> sendSimple()
+                                    "test" -> sendTest()
+                                    "custom" -> sendCustom()
+                                    else -> println("Type not found. Usage: send-msg <simple|test|custom>")
+                                }
+                            } else {
+                                println("You must to set a type of message: simple, custom or test\n")
                             }
                         } else {
-                            println("You must to set a type of message: simple, custom or test ")
+                            println("You must to set api key and registration ids. Execute: `set-key <api_key>` and `add-id <id>`\n")
                         }
-                    } else {
-                        println("You must to set api key and registration ids. Execute: set-key <api_key> and add-id <id>")
                     }
-                }
 
-                "exit" -> println("Bye!")
-                else -> null
+                    "exit" -> println("Bye!")
+                }
             }
         }
     }
@@ -95,7 +96,7 @@ private fun sendCustom() {
 
     try {
         val jsonObject = JsonParser().parse(jsonString)
-        ApiManager.sendMessage(config.apiKey, Payload(jsonObject, config.registrationIds))
+        ApiManager.sendMessage(config.apiKey, Payload(jsonObject, config.regIds))
     } catch (e: Exception) {
         println("Json parse error")
     }
@@ -103,7 +104,7 @@ private fun sendCustom() {
 
 private fun sendTest() {
     ApiManager.sendMessage(config.apiKey,
-            Payload(SimpleData("test title", "test message").getData(), config.registrationIds))
+            Payload(SimpleData("test title", "test message").getData(), config.regIds))
 }
 
 private fun sendSimple() {
@@ -114,7 +115,7 @@ private fun sendSimple() {
     val message = readLine() ?: "Empty message"
 
     ApiManager.sendMessage(config.apiKey,
-            Payload(SimpleData(title, message).getData(), config.registrationIds))
+            Payload(SimpleData(title, message).getData(), config.regIds))
 }
 
 private fun loadConfig(): Boolean {
@@ -168,7 +169,7 @@ fun createConfig() {
     val isValidKey = key != null && key.isNotEmpty()
     if (isValidKey && ids.isNotEmpty()) {
         config.apiKey = key!!
-        config.registrationIds = ids
+        config.regIds = ids
 
         saveConfig()
     } else {
